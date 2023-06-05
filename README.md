@@ -1,66 +1,53 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+### How to run the project
+- clone the repository
+- create a database and add the db name, user and password to the `.env` file
+  - DB_DATABASE=my_theresa
+  - DB_USERNAME=root
+  - DB_PASSWORD=password
+- run `composer install`
+- the requested endpoint is located at `[GET] http://localhost/products` and the available params are `category` and `priceLessThan`
+- for running tests type `php artisan test` (this will use the `sqlite` database located at `/database/database.sqlite`)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+### Assumptions
+- I have assumed that all discounts that are stored in the database are active and valid.
+- I have assumed the website's administration area includes a form to create new discounts and a table to view them.
 
-## About Laravel
+### Decisions
+- I have included `.env` and `database.sqlite` files in the repository to make it easier to run the project. I wouldn't do that normally.
+- I have decided to use the Laravel framework because it is the framework I am most familiar with, and it has a lot of built-in functionality that I can use to speed up development.
+- I have over-engineered a separate `product_prices` table to keep track of the price history of a product in case it is necessary AND/OR the system could also have multiple prices for the same product (e.g. different currencies, price parity adjustments etc.).
+- I have created logic for both percentage and fixed discounts, thinking that the system could have both types of discounts active at the same time.
+- I have used Pest to create basic tests because I prefer its syntax over PHPUnit's.
+- I took the liberty to create a separate `ProductCategory` model and table because I think it's easier to add features to the system in the future this way. For example, if we want to add a `description` field to the category, we can do it without modifying the `products` table.
+- I have used a polymorphic One-To-Many relation between Products/Categories and Discounts because I think the relation separates the concerns better. Queries and code are then easier to read, write and understand.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### 'Nice to have'-s
+- use memcached / Redis to cache the computed prices in order to avoid querying the database and using memory for calculations on every API request.
+- suggested additional discounts table properties: `valid_from`, `valid_until` (datetime) OR `active` (boolean)
+- validate `category` parameter actually exists in the database and `priceLessThen` is a positive integer
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
-
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Models
+- Product -mf
+    - id - index
+    - sku - string
+    - name - string
+    - category_id - belongsTo:product_categories
+    - [priceData] - has_one:product_prices
+    - price - computed
+    - created_at - dateTime
+    - updated_at - dateTime
+- ProductPrice -mf
+    - id - index
+    - product_id - belongsTo:products
+    - original - integer
+    - currency - string (USD, EUR, GBP) - default: EUR
+    - created_at - dateTime
+    - updated_at - dateTime
+- PriceDiscount -m
+    - id - index
+    - type - string (percentage, fixed)
+    - target_type - string (product, category)
+    - target_id - integer
+    - amount - integer
+    - created_at - dateTime
+    - updated_at  - dateTime
