@@ -5,16 +5,18 @@
   - DB_USERNAME=root
   - DB_PASSWORD=password
 - run `composer install`
-- the requested endpoint is located at `[GET] http://localhost/products` and the available params are `category` and `priceLessThan`
+- run `php artisan migrate:fresh --seed` to create the database tables and seed them with initial data (provided data appears first)
+- the requested endpoint is located at `[GET] http://localhost/products?category=boots&priceLessThan=80000`
 - for running tests type `php artisan test` (this will use the `sqlite` database located at `/database/database.sqlite`)
 
 ### Assumptions
+- I have assumed that this test is the start to a bigger project.
 - I have assumed that all discounts that are stored in the database are active and valid.
 - I have assumed the website's administration area includes a form to create new discounts and a table to view them.
 
 ### Decisions
-- I have included `.env` and `database.sqlite` files in the repository to make it easier to run the project. I wouldn't do that normally.
-- I have decided to use the Laravel framework because it is the framework I am most familiar with, and it has a lot of built-in functionality that I can use to speed up development.
+- I have decided to use the Laravel framework because it is the framework I am most familiar with and because this test could be the start of a bigger project.
+- I have included `.env` and `database.sqlite` files in the Git repository to make it easier to run the project. I wouldn't do that normally.
 - I have over-engineered a separate `product_prices` table to keep track of the price history of a product in case it is necessary AND/OR the system could also have multiple prices for the same product (e.g. different currencies, price parity adjustments etc.).
 - I have created logic for both percentage and fixed discounts, thinking that the system could have both types of discounts active at the same time.
 - I have used Pest to create basic tests because I prefer its syntax over PHPUnit's.
